@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👁️ DeOlho — Smart Error Monitor</title>
+    <!-- Outfit Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom Premium CSS */
+        :root {
+            --bg-base: #020617;
+            --bg-surface: rgba(15, 23, 42, 0.6);
+            --bg-card: rgba(30, 41, 59, 0.45);
+            --border-color: rgba(255, 255, 255, 0.08);
+            
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.15);
+            --secondary: #a855f7;
+            --secondary-glow: rgba(168, 85, 247, 0.15);
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dark: #64748b;
+            
+            --color-low: #10b981;
+            --color-medium: #f59e0b;
+            --color-high: #f97316;
+            --color-critical: #ef4444;
+            
+            --font-sans: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 45%);
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            width: 260px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, var(--text-main), var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--text-main);
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+            border-color: rgba(99, 102, 241, 0.25);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.05);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .system-status {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 14px;
+            margin-top: auto;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--color-low);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--color-low);
+            margin-right: 0.5rem;
+        }
+
+        /* Main Workspace */
+        main {
+            margin-left: 260px;
+            flex-grow: 1;
+            padding: 3rem;
+            max-width: 1600px;
+            width: calc(100% - 260px);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .sub-header {
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            font-size: 1rem;
+        }
+
+        /* Grid Layouts */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .metric-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .metric-desc {
+            font-size: 0.8rem;
+            color: var(--text-dark);
+        }
+
+        /* Section Layout */
+        .section-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .panel {
+            background: var(--bg-surface);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Lists and Tables */
+        .error-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .error-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .error-item:hover {
+            transform: translateX(4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(30, 41, 59, 0.6);
+        }
+
+        .error-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            max-width: 70%;
+        }
+
+        .error-title {
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .error-message {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .error-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-dark);
+            margin-top: 0.25rem;
+        }
+
+        .error-stats {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-new { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+        .badge-resolved { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-ignored { background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3); }
+
+        .badge-low { background: rgba(16, 185, 129, 0.1); color: var(--color-low); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge-medium { background: rgba(245, 158, 11, 0.1); color: var(--color-medium); border: 1px solid rgba(245, 158, 11, 0.2); }
+        .badge-high { background: rgba(249, 115, 22, 0.1); color: var(--color-high); border: 1px solid rgba(249, 115, 22, 0.2); }
+        .badge-critical { background: rgba(239, 68, 68, 0.1); color: var(--color-critical); border: 1px solid rgba(239, 68, 68, 0.2); }
+
+        .occurrences-count {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        .occurrences-val {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .occurrences-lbl {
+            font-size: 0.7rem;
+            color: var(--text-dark);
+            text-transform: uppercase;
+        }
+
+        /* Applications & Queue Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .app-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .app-card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .app-card-env {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            width: fit-content;
+        }
+
+        /* Forms & Inputs */
+        .form-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        input[type="text"], input[type="password"], select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            transition: var(--transition-smooth);
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--text-main);
+            border: none;
+            border-radius: 12px;
+            padding: 0.85rem 1.5rem;
+            font-family: var(--font-sans);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+            width: fit-content;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-dark);
+            box-shadow: none;
+        }
+
+        /* Custom Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition-smooth);
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 28px;
+            width: 90%;
+            max-width: 1100px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            transition: var(--transition-smooth);
+        }
+
+        .modal-overlay.open .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            gap: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: var(--transition-smooth);
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        /* Stacktrace View */
+        pre {
+            background: #020617;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 16px;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+            max-height: 350px;
+        }
+
+        /* AI Analysis Layout */
+        .ai-box {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .ai-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ai-field {
+            margin-top: 0.5rem;
+        }
+
+        .ai-field-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .ai-field-body {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Tab content hiding */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Search bar */
+        .search-bar {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .search-bar input {
+            flex-grow: 1;
+        }
+
+        /* Custom Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--color-low);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transform: translateY(150%);
+            transition: var(--transition-smooth);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-top: 0.25rem;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            border-radius: 99px;
+            width: 0;
+            transition: var(--transition-smooth);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside>
+        <div class="logo">
+            👁️ <span>DeOlho</span>
+        </div>
+        
+        <nav class="nav-links">
+            <div class="nav-item active" onclick="switchTab('dashboard')">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Dashboard
+            </div>
+            <div class="nav-item" onclick="switchTab('errors')">
+                <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Erros
+            </div>
+            <div class="nav-item" onclick="switchTab('applications')">
+                <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                Aplicações
+            </div>
+            <div class="nav-item" onclick="switchTab('settings')">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Configurações
+            </div>
+        </nav>
+
+        <div class="system-status">
+            <span class="status-dot"></span> Pipeline Ativa
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+        
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content active">
+            <header>
+                <div>
+                    <h1>Dashboard</h1>
+                    <div class="sub-header">Visão geral da saúde das suas aplicações.</div>
+                </div>
+            </header>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <span class="metric-label">Total de Erros</span>
+                    <span class="metric-value" id="stat-total-errors">-</span>
+                    <span class="metric-desc">Erros únicos registrados no banco</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Últimas 24 Horas</span>
+                    <span class="metric-value" id="stat-last-24h">-</span>
+                    <span class="metric-desc">Ocorrências de erros no último dia</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Fila Ativa</span>
+                    <span class="metric-value" id="stat-queue-active">-</span>
+                    <span class="metric-desc">Jobs em processamento assíncrono</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Erros na DLQ</span>
+                    <span class="metric-value" id="stat-queue-dlq" style="color: var(--color-critical)">-</span>
+                    <span class="metric-desc">Mensagens que esgotaram as retentativas</span>
+                </div>
+            </div>
+
+            <div class="section-container">
+                <div class="panel">
+                    <div class="panel-title">
+                        Erros Mais Frequentes
+                        <button class="btn btn-secondary" onclick="switchTab('errors')" style="padding: 0.5rem 1rem; font-size: 0.85rem">Ver Todos</button>
+                    </div>
+                    <div class="error-list" id="top-errors-container">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">Saúde das Filas</div>
+                    <div style="display: flex; flex-direction: column; gap: 1.25rem;" id="queue-details">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERRORS TAB -->
+        <div id="tab-errors" class="tab-content">
+            <header>
+                <div>
+                    <h1>Erros Registrados</h1>
+                    <div class="sub-header">Logs e análises de exceções agrupadas por similaridade.</div>
+                </div>
+            </header>
+
+            <div class="panel">
+                <div class="search-bar">
+                    <input type="text" id="error-search-input" placeholder="Buscar por mensagem, exceção ou aplicação..." oninput="handleSearch()">
+                    <select id="filter-severity" onchange="loadErrors()" style="width: 180px">
+                        <option value="">Todas Severidades</option>
+                        <option value="LOW">LOW</option>
+                        <option value="MEDIUM">MEDIUM</option>
+                        <option value="HIGH">HIGH</option>
+                        <option value="CRITICAL">CRITICAL</option>
+                    </select>
+                </div>
+
+                <div class="error-list" id="all-errors-container">
+                    <!-- Loaded dynamically -->
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem">
+                    <button class="btn btn-secondary" id="btn-prev-page" onclick="changePage(-1)">Anterior</button>
+                    <span id="page-indicator" style="color: var(--text-muted)">Página 1</span>
+                    <button class="btn btn-secondary" id="btn-next-page" onclick="changePage(1)">Próxima</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- APPLICATIONS TAB -->
+        <div id="tab-applications" class="tab-content">
+            <header>
+                <div>
+                    <h1>Aplicações Monitoradas</h1>
+                    <div class="sub-header">Lista de microsserviços integrados ao DeOlho.</div>
+                </div>
+            </header>
+
+            <div class="card-grid" id="apps-container">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="tab-settings" class="tab-content">
+            <header>
+                <div>
+                    <h1>Configurações do Sistema</h1>
+                    <div class="sub-header">Ajuste os provedores de inteligência artificial, webhooks e notificações.</div>
+                </div>
+            </header>
+
+            <div class="panel" style="max-width: 800px">
+                <form id="settings-form" onsubmit="saveSettings(event)">
+                    
+                    <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem">Inteligência Artificial (Análise de Erros)</h3>
+                    
+                    <div class="form-group">
+                        <label for="ai-enabled">Habilitar Inteligência Artificial</label>
+                        <select id="ai-enabled" onchange="toggleAiFields()">
+                            <option value="true">Sim</option>
+                            <option value="false">Não (Usar apenas análise local/heurística)</option>
+                        </select>
+                    </div>
+
+                    <div id="ai-fields">
+                        <div class="form-group">
+                            <label for="ai-provider">Provedor de IA</label>
+                            <select id="ai-provider" onchange="toggleAiProviderFields()">
+                                <option value="OPENAI">OpenAI Oficial</option>
+                                <option value="GEMINI">Google Gemini</option>
+                                <option value="CLAUDE">Anthropic Claude</option>
+                                <option value="OPENAI_COMPATIBLE">Compatível com OpenAI (Ollama, Groq, LM Studio, etc.)</option>
+                                <option value="HEURISTIC">Nenhum (Apenas Heurística Local)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="group-ai-base-url">
+                            <label for="ai-base-url">Endpoint API (Base URL)</label>
+                            <input type="text" id="ai-base-url" placeholder="https://api.openai.com">
+                            <span style="font-size: 0.75rem; color: var(--text-dark)">Para Ollama local use: <code>http://localhost:11434/v1</code>. Para Groq: <code>https://api.groq.com/openai/v1</code></span>
+                        </div>
+
+                        <div class="form-group" id="group-ai-api-key">
+                            <label for="ai-api-key">Chave de API (API Key)</label>
+                            <input type="password" id="ai-api-key" placeholder="Insira a API Key">
+                        </div>
+
+                        <div class="form-group" id="group-ai-model">
+                            <label for="ai-model">Modelo (Model Name)</label>
+                            <input type="text" id="ai-model" placeholder="gpt-4o-mini">
+                            <span style="font-size: 0.75rem; color: var(--text-dark)">Ex: <code>gpt-4o-mini</code>, <code>llama3</code>, <code>mistral</code>, <code>llama-3.1-70b-versatile</code></span>
+                        </div>
+
+                        <div class="form-group" id="group-ai-language">
+                            <label for="ai-language">Idioma de Resposta da IA</label>
+                            <select id="ai-language">
+                                <option value="pt-BR">Português (pt-BR)</option>
+                                <option value="en-US">Inglês (en-US)</option>
+                                <option value="es-ES">Espanhol (es-ES)</option>
+                                <option value="fr-FR">Francês (fr-FR)</option>
+                            </select>
+                            <span style="font-size: 0.75rem; color: var(--text-dark)">Idioma no qual a IA irá estruturar as explicações e soluções.</span>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 2.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem">Notificações por Webhook</h3>
+
+                    <div class="form-group">
+                        <label for="notifications-enabled">Habilitar Webhooks</label>
+                        <select id="notifications-enabled" onchange="toggleWebhookFields()">
+                            <option value="true">Sim</option>
+                            <option value="false">Não</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="group-webhook-url">
+                        <label for="notifications-webhook-url">URL do Webhook</label>
+                        <input type="text" id="notifications-webhook-url" placeholder="https://discord.com/api/webhooks/... ou Slack webhook">
+                    </div>
+
+                    <h3 style="margin-top: 2.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem">Configurações do Servidor</h3>
+
+                    <div class="form-group">
+                        <label for="server-port">Porta do Servidor (Requer Reinicialização)</label>
+                        <input type="number" id="server-port" placeholder="8888" min="1024" max="65535">
+                        <span style="font-size: 0.75rem; color: var(--text-dark)">Porta HTTP utilizada pelo painel e API. Alterações entram em vigor após reiniciar a aplicação.</span>
+                    </div>
+
+                    <button type="submit" class="btn" style="margin-top: 1rem">Salvar Configurações</button>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Error Detail Modal -->
+    <div class="modal-overlay" id="error-modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem">
+                        <span class="badge" id="modal-badge-severity">-</span>
+                        <span class="badge" id="modal-badge-status">-</span>
+                        <span class="badge" id="modal-app-name" style="background: rgba(255,255,255,0.05); color: var(--text-main);">-</span>
+                    </div>
+                    <h2 id="modal-exception-title" style="font-family: var(--font-mono); font-size: 1.35rem; margin-bottom: 0.25rem">-</h2>
+                    <p id="modal-message-desc" style="color: var(--text-muted); font-size: 1rem">-</p>
+                </div>
+                <button class="close-btn" onclick="closeModal(null)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <!-- AI Box Section -->
+            <div class="ai-box" id="modal-ai-box">
+                <div class="ai-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+                    Análise de Inteligência Artificial
+                </div>
+                
+                <div class="ai-field">
+                    <div class="ai-field-label">Resumo do erro</div>
+                    <div class="ai-field-body" id="ai-summary" style="font-weight: 500;">Carregando análise...</div>
+                </div>
+
+                <div class="ai-field">
+                    <div class="ai-field-label">Causa provável</div>
+                    <div class="ai-field-body" id="ai-cause">-</div>
+                </div>
+
+                <div class="ai-field">
+                    <div class="ai-field-label">Sugestão de solução</div>
+                    <div class="ai-field-body" id="ai-solution" style="white-space: pre-wrap;">-</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem">
+                    <div>
+                        <div class="ai-field-label">Categoria Estimada</div>
+                        <span class="badge" id="ai-category" style="background: rgba(168,85,247,0.15); color: #d8b4fe; border: 1px solid rgba(168,85,247,0.3)">-</span>
+                    </div>
+                    <div>
+                        <div class="ai-field-label">Confiança da Análise</div>
+                        <span id="ai-confidence-value" style="font-size: 0.85rem; font-weight: 700;">-%</span>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="ai-confidence-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stacktrace Section -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem">
+                <h4 style="font-size: 1rem; font-weight: 700;">Stack Trace</h4>
+                <button class="btn btn-secondary" onclick="copyStackTrace()" style="padding: 0.4rem 0.85rem; font-size: 0.8rem">Copiar Stack Trace</button>
+            </div>
+            <pre id="modal-stacktrace"></pre>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem">
+                <button class="btn" id="modal-btn-resolve" onclick="resolveCurrentError()">Marcar como Resolvido</button>
+                <button class="btn btn-secondary" id="modal-btn-ignore" onclick="ignoreCurrentError()">Ignorar Erro</button>
+                <button class="btn btn-secondary" onclick="closeModal(null)" style="margin-left: auto">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="system-toast">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-low)"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span id="toast-message">Configurações salvas com sucesso!</span>
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        let currentTab = 'dashboard';
+        let errorsPage = 0;
+        const errorsPageSize = 10;
+        let activeErrorId = null;
+        let searchTimeout = null;
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchStats();
+            loadErrors();
+            fetchApplications();
+            fetchSettings();
+            
+            // Auto refresh stats every 10 seconds
+            setInterval(() => {
+                if (currentTab === 'dashboard') fetchStats();
+            }, 10000);
+        });
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Update sidebar navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // Hide/Show tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            // Load data specific to tab
+            if (tabName === 'dashboard') {
+                fetchStats();
+            } else if (tabName === 'errors') {
+                loadErrors();
+            } else if (tabName === 'applications') {
+                fetchApplications();
+            } else if (tabName === 'settings') {
+                fetchSettings();
+            }
+        }
+
+        // Fetch dashboard overview
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/v1/stats/overview');
+                const data = await res.json();
+
+                document.getElementById('stat-total-errors').innerText = data.totalErrors || 0;
+                document.getElementById('stat-last-24h').innerText = data.errorsLast24h || 0;
+                
+                // Queues status
+                const activeJobs = Object.values(data.queue.queueSizes).reduce((a, b) => a + b, 0);
+                document.getElementById('stat-queue-active').innerText = activeJobs;
+                document.getElementById('stat-queue-dlq').innerText = data.queue.deadLetterQueueSize || 0;
+
+                // Load queue panel details
+                const queueDetails = document.getElementById('queue-details');
+                queueDetails.innerHTML = '';
+                
+                // Render queue list progress
+                for (const [qName, size] of Object.entries(data.queue.queueSizes)) {
+                    queueDetails.innerHTML += `
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.25rem">
+                                <span style="font-family: var(--font-mono); font-weight: 500">${qName}</span>
+                                <span style="font-weight: 700">${size} jobs</span>
+                            </div>
+                            <div class="confidence-bar" style="height: 4px">
+                                <div class="confidence-fill" style="width: ${size > 0 ? Math.min(size * 10, 100) : 0}%; background: var(--primary)"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Load Top errors list
+                const topRes = await fetch('/api/v1/stats/top-errors?limit=5');
+                const topErrors = await topRes.json();
+                
+                const topContainer = document.getElementById('top-errors-container');
+                topContainer.innerHTML = '';
+                
+                if (topErrors.length === 0) {
+                    topContainer.innerHTML = '<div style="color: var(--text-dark); text-align: center; padding: 2rem">Nenhum erro registrado ainda.</div>';
+                }
+
+                topErrors.forEach(err => {
+                    topContainer.appendChild(createErrorItemHTML(err));
+                });
+
+            } catch (err) {
+                console.error('Failed to fetch dashboard metrics:', err);
+            }
+        }
+
+        // Fetch and load paginated, searchable error list
+        async function loadErrors() {
+            try {
+                const query = document.getElementById('error-search-input').value;
+                const severity = document.getElementById('filter-severity').value;
+                
+                let url = `/api/v1/errors?page=${errorsPage}&size=${errorsPageSize}`;
+                if (query.trim()) {
+                    url = `/api/v1/errors/search?q=${encodeURIComponent(query)}&page=${errorsPage}&size=${errorsPageSize}`;
+                }
+                
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                const container = document.getElementById('all-errors-container');
+                container.innerHTML = '';
+                
+                let content = data.content || data;
+                if (!Array.isArray(content) && data.content) content = data.content;
+
+                // Filter locally if severity is specified (API does not support direct severity filter in pagination query yet)
+                if (severity) {
+                    content = content.filter(e => e.severity === severity);
+                }
+
+                if (!content || content.length === 0) {
+                    container.innerHTML = '<div style="color: var(--text-dark); text-align: center; padding: 3rem">Nenhum erro encontrado para os filtros ativos.</div>';
+                    document.getElementById('page-indicator').innerText = 'Página 1 de 1';
+                    return;
+                }
+
+                content.forEach(err => {
+                    container.appendChild(createErrorItemHTML(err));
+                });
+
+                const totalPages = data.totalPages || 1;
+                document.getElementById('page-indicator').innerText = `Página ${errorsPage + 1} de ${totalPages}`;
+                
+                document.getElementById('btn-prev-page').disabled = errorsPage === 0;
+                document.getElementById('btn-next-page').disabled = errorsPage >= totalPages - 1;
+
+            } catch (err) {
+                console.error('Failed to load error events:', err);
+            }
+        }
+
+        function handleSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                errorsPage = 0;
+                loadErrors();
+            }, 300);
+        }
+
+        function changePage(direction) {
+            errorsPage += direction;
+            if (errorsPage < 0) errorsPage = 0;
+            loadErrors();
+        }
+
+        // Helper to construct list items
+        function createErrorItemHTML(err) {
+            const item = document.createElement('div');
+            item.className = 'error-item';
+            item.onclick = () => openErrorDetails(err.id);
+
+            const severityBadgeClass = `badge-${err.severity.toLowerCase()}`;
+            const statusBadgeClass = `badge-${err.status.toLowerCase()}`;
+
+            item.innerHTML = `
+                <div class="error-info">
+                    <div style="display: flex; align-items: center; gap: 0.5rem">
+                        <span class="badge ${severityBadgeClass}">${err.severity}</span>
+                        <span class="badge ${statusBadgeClass}">${err.status}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600">${err.application || err.applicationName || 'unknown-app'}</span>
+                    </div>
+                    <div class="error-title" title="${err.exception}">${err.exception}</div>
+                    <div class="error-message" title="${err.message}">${err.message}</div>
+                    <div class="error-meta">
+                        <span>Host: ${err.host || 'unknown'}</span>
+                        <span>Visto pela última vez: ${new Date(err.lastSeen).toLocaleString()}</span>
+                    </div>
+                </div>
+                <div class="error-stats">
+                    <div class="occurrences-count">
+                        <span class="occurrences-val">${err.occurrences}</span>
+                        <span class="occurrences-lbl">ocorrências</span>
+                    </div>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-dark)" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>
+            `;
+            return item;
+        }
+
+        // Fetch applications list
+        async function fetchApplications() {
+            try {
+                const res = await fetch('/api/v1/applications');
+                const apps = await res.json();
+                
+                const container = document.getElementById('apps-container');
+                container.innerHTML = '';
+
+                if (apps.length === 0) {
+                    container.innerHTML = '<div style="color: var(--text-dark); text-align: center; padding: 3rem; grid-column: span 3">Nenhuma aplicação registrada ainda. Submeta erros para auto-registro.</div>';
+                    return;
+                }
+
+                apps.forEach(app => {
+                    container.innerHTML += `
+                        <div class="app-card">
+                            <div>
+                                <span class="app-card-env">${app.environment}</span>
+                                <h3 class="app-card-title" style="margin-top: 0.5rem">${app.name}</h3>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 1rem">
+                                <span style="font-size: 0.85rem; color: var(--text-muted)">Erros únicos</span>
+                                <span style="font-size: 1.25rem; font-weight: 800">${app.errorCount || 0}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error('Failed to load applications:', err);
+            }
+        }
+
+        // Open detailed exception and AI report in modal
+        async function openErrorDetails(id) {
+            activeErrorId = id;
+            const modal = document.getElementById('error-modal');
+            modal.classList.add('open');
+
+            // Reset modal state
+            document.getElementById('modal-exception-title').innerText = 'Carregando...';
+            document.getElementById('modal-message-desc').innerText = '';
+            document.getElementById('modal-stacktrace').innerText = '';
+            
+            // Reset AI box
+            document.getElementById('modal-ai-box').style.display = 'none';
+            document.getElementById('ai-summary').innerText = 'Analisando logs...';
+            document.getElementById('ai-cause').innerText = '-';
+            document.getElementById('ai-solution').innerText = '-';
+            document.getElementById('ai-category').innerText = '-';
+            document.getElementById('ai-confidence-fill').style.width = '0%';
+            document.getElementById('ai-confidence-value').innerText = '-%';
+
+            try {
+                // Fetch error details
+                const res = await fetch(`/api/v1/errors/${id}`);
+                const err = await res.json();
+
+                document.getElementById('modal-app-name').innerText = err.applicationName || err.application?.name || 'unknown-app';
+                document.getElementById('modal-exception-title').innerText = err.exception;
+                document.getElementById('modal-message-desc').innerText = err.message;
+                document.getElementById('modal-stacktrace').innerText = err.stacktrace || 'Nenhum stacktrace disponível.';
+                
+                // Badges
+                const severityBadge = document.getElementById('modal-badge-severity');
+                severityBadge.innerText = err.severity;
+                severityBadge.className = `badge badge-${err.severity.toLowerCase()}`;
+
+                const statusBadge = document.getElementById('modal-badge-status');
+                statusBadge.innerText = err.status;
+                statusBadge.className = `badge badge-${err.status.toLowerCase()}`;
+
+                // Toggle actions buttons based on current status
+                if (err.status === 'RESOLVED') {
+                    document.getElementById('modal-btn-resolve').style.display = 'none';
+                    document.getElementById('modal-btn-ignore').style.display = 'inline-block';
+                } else if (err.status === 'IGNORED') {
+                    document.getElementById('modal-btn-resolve').style.display = 'inline-block';
+                    document.getElementById('modal-btn-ignore').style.display = 'none';
+                } else {
+                    document.getElementById('modal-btn-resolve').style.display = 'inline-block';
+                    document.getElementById('modal-btn-ignore').style.display = 'inline-block';
+                }
+
+                // Fetch AI analysis
+                fetchAiAnalysis(id);
+
+            } catch (ex) {
+                console.error('Failed to load error details:', ex);
+            }
+        }
+
+        async function fetchAiAnalysis(id) {
+            try {
+                const res = await fetch(`/api/v1/errors/${id}/analysis`);
+                if (res.status === 404) {
+                    document.getElementById('modal-ai-box').style.display = 'block';
+                    document.getElementById('ai-summary').innerText = 'Esta exceção está na fila para análise pela Inteligência Artificial. Aguarde alguns segundos e reabra o painel.';
+                    return;
+                }
+                const analysis = await res.json();
+
+                document.getElementById('modal-ai-box').style.display = 'flex';
+                document.getElementById('ai-summary').innerText = analysis.summary || 'Sem resumo.';
+                document.getElementById('ai-cause').innerText = analysis.cause || 'Desconhecida.';
+                document.getElementById('ai-solution').innerText = analysis.solution || 'Nenhuma recomendação.';
+                document.getElementById('ai-category').innerText = analysis.category || 'General';
+                
+                const confidencePct = Math.round((analysis.confidence || 0.5) * 100);
+                document.getElementById('ai-confidence-value').innerText = `${confidencePct}%`;
+                document.getElementById('ai-confidence-fill').style.width = `${confidencePct}%`;
+
+            } catch (ex) {
+                console.error('Failed to load AI analysis:', ex);
+            }
+        }
+
+        function closeModal(event) {
+            if (!event || event.target === document.getElementById('error-modal') || event === null) {
+                document.getElementById('error-modal').classList.remove('open');
+                activeErrorId = null;
+            }
+        }
+
+        async function updateStatus(status) {
+            if (!activeErrorId) return;
+            try {
+                await fetch(`/api/v1/errors/${activeErrorId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: status })
+                });
+                
+                showToast(`Erro marcado como ${status.toLowerCase()}!`);
+                closeModal(null);
+                loadErrors();
+                fetchStats();
+            } catch (err) {
+                console.error('Failed to update error status:', err);
+            }
+        }
+
+        function resolveCurrentError() { updateStatus('RESOLVED'); }
+        function ignoreCurrentError() { updateStatus('IGNORED'); }
+
+        function copyStackTrace() {
+            const stack = document.getElementById('modal-stacktrace').innerText;
+            navigator.clipboard.writeText(stack).then(() => {
+                showToast('Stack trace copiado para a área de transferência!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        // Toast utils
+        function showToast(message) {
+            const toast = document.getElementById('system-toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Settings Handling
+        async function fetchSettings() {
+            try {
+                const res = await fetch('/api/v1/settings');
+                const settingsList = await res.json();
+                
+                // Convert array list to map key-value
+                const settings = {};
+                if (Array.isArray(settingsList)) {
+                    settingsList.forEach(s => {
+                        settings[s.key] = s.value;
+                    });
+                } else {
+                    Object.assign(settings, settingsList);
+                }
+
+                document.getElementById('ai-enabled').value = settings['ai.enabled'] || 'true';
+                document.getElementById('ai-provider').value = settings['ai.provider'] || 'HEURISTIC';
+                document.getElementById('ai-base-url').value = settings['ai.base-url'] || 'https://api.openai.com';
+                document.getElementById('ai-api-key').value = settings['ai.api-key'] || '';
+                document.getElementById('ai-model').value = settings['ai.model'] || 'gpt-4o-mini';
+                document.getElementById('ai-language').value = settings['ai.language'] || 'pt-BR';
+
+                document.getElementById('notifications-enabled').value = settings['notifications.enabled'] || 'false';
+                document.getElementById('notifications-webhook-url').value = settings['notifications.webhook-url'] || '';
+                document.getElementById('server-port').value = settings['server.port'] || '8888';
+
+                toggleAiFields();
+                toggleWebhookFields();
+            } catch (err) {
+                console.error('Failed to load settings:', err);
+            }
+        }
+
+        async function saveSettings(event) {
+            event.preventDefault();
+            
+            const payload = {
+                'ai.enabled': document.getElementById('ai-enabled').value,
+                'ai.provider': document.getElementById('ai-provider').value,
+                'ai.base-url': document.getElementById('ai-base-url').value,
+                'ai.api-key': document.getElementById('ai-api-key').value,
+                'ai.model': document.getElementById('ai-model').value,
+                'ai.language': document.getElementById('ai-language').value,
+                'notifications.enabled': document.getElementById('notifications-enabled').value,
+                'notifications.webhook-url': document.getElementById('notifications-webhook-url').value,
+                'server.port': document.getElementById('server-port').value,
+            };
+
+            try {
+                const res = await fetch('/api/v1/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    showToast('Configurações salvas! Reinicie o servidor se alterou a porta.');
+                    fetchSettings(); // reload to get mask
+                } else {
+                    showToast('Erro ao salvar configurações.');
+                }
+            } catch (err) {
+                console.error('Failed to save settings:', err);
+                showToast('Falha na conexão com o servidor.');
+            }
+        }
+
+        function toggleAiFields() {
+            const enabled = document.getElementById('ai-enabled').value === 'true';
+            document.getElementById('ai-fields').style.display = enabled ? 'block' : 'none';
+        }
+
+        function toggleAiProviderFields() {
+            const provider = document.getElementById('ai-provider').value;
+            const isHeuristic = provider === 'HEURISTIC';
+            const isCompatible = provider === 'OPENAI_COMPATIBLE';
+            
+            document.getElementById('group-ai-base-url').style.display = isCompatible ? 'flex' : 'none';
+            document.getElementById('group-ai-api-key').style.display = isHeuristic ? 'none' : 'flex';
+            document.getElementById('group-ai-model').style.display = isHeuristic ? 'none' : 'flex';
+        }
+
+        function toggleWebhookFields() {
+            const enabled = document.getElementById('notifications-enabled').value === 'true';
+            document.getElementById('group-webhook-url').style.display = enabled ? 'flex' : 'none';
+        }
+    </script>
+</body>
+</html>
