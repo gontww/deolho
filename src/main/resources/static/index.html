@@ -12,15 +12,15 @@
     <style>
         /* Custom Premium CSS */
         :root {
-            --bg-base: #020617;
+            --bg-base: #09090b;
             --bg-surface: rgba(15, 23, 42, 0.6);
             --bg-card: rgba(30, 41, 59, 0.45);
             --border-color: rgba(255, 255, 255, 0.08);
             
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.15);
-            --secondary: #a855f7;
-            --secondary-glow: rgba(168, 85, 247, 0.15);
+            --primary: #f97316;
+            --primary-glow: rgba(249, 115, 22, 0.15);
+            --secondary: #f59e0b;
+            --secondary-glow: rgba(245, 158, 11, 0.15);
             
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -51,8 +51,8 @@
             overflow-x: hidden;
             display: flex;
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 45%);
+                radial-gradient(circle at 10% 20%, rgba(249, 115, 22, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.08) 0%, transparent 45%);
         }
 
         /* Sidebar Navigation */
@@ -120,8 +120,8 @@
 
         .nav-item.active {
             background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
-            border-color: rgba(99, 102, 241, 0.25);
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.05);
+            border-color: rgba(249, 115, 22, 0.25);
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.05);
         }
 
         .nav-item svg {
@@ -340,7 +340,7 @@
             letter-spacing: 0.5px;
         }
 
-        .badge-new { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+        .badge-new { background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.3); }
         .badge-resolved { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
         .badge-ignored { background: rgba(100, 116, 139, 0.15); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.3); }
 
@@ -443,13 +443,13 @@
             font-size: 0.95rem;
             cursor: pointer;
             transition: var(--transition-smooth);
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.2);
             width: fit-content;
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.35);
         }
 
         .btn:active {
@@ -549,8 +549,8 @@
 
         /* AI Analysis Layout */
         .ai-box {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
-            border: 1px solid rgba(168, 85, 247, 0.25);
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(245, 158, 11, 0.1));
+            border: 1px solid rgba(245, 158, 11, 0.25);
             border-radius: 20px;
             padding: 2rem;
             margin-bottom: 1.5rem;
@@ -564,7 +564,7 @@
             align-items: center;
             gap: 0.5rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #a855f7, #6366f1);
+            background: linear-gradient(135deg, #f59e0b, #f97316);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
