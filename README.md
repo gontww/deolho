@@ -1,4 +1,4 @@
-# 👁️ DeOlho — Smart Error Monitor
+# DeOlho
 
 Plataforma de monitoramento de erros com processamento assíncrono e Inteligência Artificial para identificar, agrupar, analisar e sugerir soluções para exceções em aplicações Java.
 

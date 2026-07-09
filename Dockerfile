@@ -1,5 +1,5 @@
 # =============================================
-# DeOlho — Smart Error Monitor
+# DeOlho
 # =============================================
 # Build:  ./mvnw clean package -DskipTests
 # Run:    ./mvnw spring-boot:run
