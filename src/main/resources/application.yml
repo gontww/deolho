@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: deolho
+
+  # Enable virtual threads (Java 21)
+  threads:
+    virtual:
+      enabled: true
+
+  # SQLite datasource
+  datasource:
+    url: jdbc:sqlite:deolho.db
+    driver-class-name: org.sqlite.JDBC
+
+  # JPA / Hibernate
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Mail (disabled by default — configure to enable notifications)
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+# Application custom properties
+deolho:
+  queue:
+    persist-workers: 2
+    ai-workers: 1
+    notification-workers: 1
+    metrics-workers: 1
+    max-retries: 3
+    retry-delay-ms: 5000
+  ai:
+    enabled: ${AI_ENABLED:true}
+  notifications:
+    enabled: ${NOTIFICATIONS_ENABLED:false}
+    webhook-url: ${WEBHOOK_URL:}
+
+# Server
+server:
+  port: 8888
+
+# Logging
+logging:
+  level:
+    com.deolho: DEBUG
+    org.hibernate.SQL: WARN
