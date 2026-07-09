@@ -261,4 +261,4 @@ O container mapeará a porta `8888:8888` e persistirá o banco de dados SQLite e
 
 ## Licença
 
-MIT
+Este projeto está licenciado sob a licença GNU Affero General Public License v3.0 (AGPL-3.0-only) - consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
