@@ -10,23 +10,56 @@ Plataforma de monitoramento de erros com processamento assíncrono e Inteligênc
 - **Spring AI** (OpenAI)
 - **Custom Queue System** (BlockingQueue + Virtual Threads)
 
-## Início rápido
+## Requisitos
+Antes de começar, certifique-se de ter instalado:
+- **Java 21** ou superior
+- **Docker** (opcional, se preferir rodar via container)
 
+## Início rápido (Local)
+
+### 1. Dar permissão de execução ao wrapper (Apenas Linux/macOS)
 ```bash
-# Compilar
-./mvnw clean compile
-
-# Rodar
-./mvnw spring-boot:run
-
-# Testar
-./mvnw test
+chmod +x mvnw
 ```
+
+### 2. Compilar e Rodar
+
+- **No Linux/macOS:**
+  ```bash
+  # Compilar
+  ./mvnw clean compile
+  
+  # Rodar a aplicação
+  ./mvnw spring-boot:run
+  ```
+
+- **No Windows (Prompt de Comando - CMD):**
+  ```cmd
+  # Compilar
+  mvnw.cmd clean compile
+  
+  # Rodar a aplicação
+  mvnw.cmd spring-boot:run
+  ```
+
+- **No Windows (PowerShell):**
+  ```powershell
+  # Compilar
+  .\mvnw.cmd clean compile
+  
+  # Rodar a aplicação
+  .\mvnw.cmd spring-boot:run
+  ```
+
+### 3. Rodar os Testes
+- **Linux/macOS:** `./mvnw test`
+- **Windows (CMD):** `mvnw.cmd test`
+- **Windows (PowerShell):** `.\mvnw.cmd test`
 
 ## Enviando um erro
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/events \
+curl -X POST http://localhost:8888/api/v1/events \
   -H "Content-Type: application/json" \
   -d '{
     "application": "payment-service",
@@ -43,16 +76,16 @@ curl -X POST http://localhost:8080/api/v1/events \
 
 ```bash
 # Listar todos
-curl http://localhost:8080/api/v1/errors
+curl http://localhost:8888/api/v1/errors
 
 # Buscar
-curl http://localhost:8080/api/v1/errors/search?q=connection
+curl http://localhost:8888/api/v1/errors/search?q=connection
 
 # Top erros
-curl http://localhost:8080/api/v1/errors/top
+curl http://localhost:8888/api/v1/errors/top
 
 # Estatísticas
-curl http://localhost:8080/api/v1/stats/overview
+curl http://localhost:8888/api/v1/stats/overview
 ```
 
 ## API Endpoints
@@ -203,7 +236,7 @@ O projeto possui um arquivo `docker-compose.yml` configurado com a política de 
 
 ### Como rodar:
 
-1. Acesse o diretório docker:
+1. Acesse o diretório `docker`:
    ```bash
    cd docker
    ```
@@ -216,7 +249,15 @@ O projeto possui um arquivo `docker-compose.yml` configurado com a política de 
    docker compose down
    ```
 
-O container mapeará a porta `8888:8888` e persistirá o banco de dados SQLite (`deolho.db`) em um volume Docker gerenciado (`deolho-data`), garantindo que nenhum dado seja perdido ao reiniciar ou recriar o container.
+### Configurações de Ambiente (Opcional)
+Você pode passar chaves de API e configurações de inicialização definindo variáveis de ambiente antes de rodar o container, ou criando um arquivo `.env` no diretório `docker` com o seguinte conteúdo:
+```env
+OPENAI_API_KEY=sua_chave_aqui
+AI_ENABLED=true
+NOTIFICATIONS_ENABLED=false
+```
+
+O container mapeará a porta `8888:8888` e persistirá o banco de dados SQLite em um volume Docker gerenciado chamado `deolho-data` (conectado no caminho `/app/data/deolho.db`), garantindo que nenhum dado seja perdido ao reiniciar ou recriar o container.
 
 ## Licença
 
